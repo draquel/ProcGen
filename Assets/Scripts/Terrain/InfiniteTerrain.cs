@@ -58,7 +58,6 @@ public class InfiniteTerrain : MonoBehaviour
             Vector2 chunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordZ + zOffset);
             if (terrainChunkDictionary.ContainsKey(chunkCoord)) {
                terrainChunkDictionary[chunkCoord].UpdateChunk(noiseSettings);
-               
             } else {
                terrainChunkDictionary.Add(chunkCoord,new TerrainChunk(chunkCoord,chunkSize,quadTreeSettings));
                terrainChunkDictionary[chunkCoord].Build(gameObject.transform,material); 

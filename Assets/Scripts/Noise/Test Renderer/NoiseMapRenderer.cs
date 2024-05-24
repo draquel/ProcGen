@@ -111,8 +111,8 @@ public class NoiseMapRenderer : MonoBehaviour
         } 
     }
 
-    private void OnDrawGizmos()
-    {
-        throw new NotImplementedException();
-    }
+    // private void OnDrawGizmos()
+    // {
+    //     throw new NotImplementedException();
+    // }
 }

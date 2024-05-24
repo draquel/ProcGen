@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 public static class QuadTreeMeshGenerator
@@ -39,36 +40,71 @@ public static class QuadTreeMeshGenerator
 
         return meshData;
     }
-    
+
+    public static MeshData GenerateMeshData3(QuadTree tree, NoiseSettings noiseSettings)
+    {
+        MeshData meshData = new MeshData();
+        foreach (QuadTreeNode leaf in tree.leaves)
+        {
+            Vector3[] verticies = new Vector3[8];
+            verticies[0] = leaf.center;
+            verticies[1] = new Vector3(leaf.center.x - leaf.size.x * 0.5f, 0, leaf.center.z + leaf.size.z * 0.5f);
+            if (leaf.neighbors[2] == 1)
+            {
+                verticies[2] = new Vector3(leaf.center.x, 0, leaf.center.z + leaf.size.z * 0.5f);
+            }
+            verticies[3] = new Vector3(leaf.center.x + leaf.size.x * 0.5f, 0, leaf.center.z + leaf.size.z * 0.5f);
+            if (leaf.neighbors[0] == 1)
+            {
+                verticies[4] = new Vector3(leaf.center.x + leaf.size.x * 0.5f, 0, leaf.center.z); 
+            }
+            verticies[5] = new Vector3(leaf.center.x + leaf.size.x * 0.5f, 0, leaf.center.z - leaf.size.z * 0.5f);
+            if (leaf.neighbors[3] == 1)
+            {
+                verticies[6] = new Vector3(leaf.center.x, 0, leaf.center.z - leaf.size.z * 0.5f);
+            }
+            verticies[7] = new Vector3(leaf.center.x - leaf.size.x * 0.5f, 0, leaf.center.z - leaf.size.z * 0.5f);
+            if (leaf.neighbors[0] == 1)
+            {
+                verticies[8] = new Vector3(leaf.center.x - leaf.size.x * 0.5f, 0, leaf.center.z);
+            }
+        }
+
+        return meshData;
+    }
+
     public static MeshData GenerateMeshData2(QuadTree tree, NoiseSettings noiseSettings)
     {
         MeshData meshData = new MeshData();
         foreach (QuadTreeNode leaf in tree.leaves)
         {
-            List<int> boundaryVertices = new List<int>();
+            List<Vector3> boundaryVertices = new List<Vector3>();
             int step = Mathf.FloorToInt(leaf.size.x / tree.settings.resolution);
 
-            for (int z = 0; z <= tree.settings.resolution; z++)
+            for (int z = -1; z <= tree.settings.resolution+1; z++)
             {
-                for (int x = 0; x <= tree.settings.resolution; x++)
+                for (int x = -1; x <= tree.settings.resolution+1; x++)
                 {
-                    bool isBoundery = x == 0 || x == tree.settings.resolution || z == 0 || z == tree.settings.resolution;
+                    bool isBoundery = x == -1 || x == tree.settings.resolution+1 || z == -1 || z == tree.settings.resolution+1;
                     float vertX = leaf.center.x + (x * step - leaf.size.x * 0.5f);
                     float vertZ = leaf.center.z + (z * step - leaf.size.z * 0.5f);
                     float vertY =
                         Noise.Evaluate((new Vector3(vertX, noiseSettings.seed, vertZ) + noiseSettings.offset) / noiseSettings.scale,
                             noiseSettings) * tree.settings.heightMultiplier;
 
-                    meshData.AddVertex(new Vector3(vertX, vertY, vertZ));
-                    int index = meshData.vertices.Count - 1;
+                    if (isBoundery) { boundaryVertices.Add(new Vector3(vertX, vertY, vertZ)); }
+                    else
+                    {
+                        meshData.AddVertex(new Vector3(vertX, vertY, vertZ));
+                        int index = meshData.vertices.Count - 1; 
+                        
+                        if (x >= tree.settings.resolution || z >= tree.settings.resolution) continue;
 
-                    if (isBoundery) { boundaryVertices.Add(index); }
-                    if (x == tree.settings.resolution || z == tree.settings.resolution) continue;
+                        int nextRowOffset = tree.settings.resolution + 1;
 
-                    int nextRowOffset = tree.settings.resolution + 1;
-
-                    meshData.AddTriangle(index, index + nextRowOffset, index + 1);
-                    meshData.AddTriangle(index + 1, index + nextRowOffset, index + nextRowOffset + 1);
+                        meshData.AddTriangle(index, index + nextRowOffset, index + 1);
+                        meshData.AddTriangle(index + 1, index + nextRowOffset, index + nextRowOffset + 1);
+                    }
                 }
             }
             for (int i = 0; i < boundaryVertices.Count - 1; i++)

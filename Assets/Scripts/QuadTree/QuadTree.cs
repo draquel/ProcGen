@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class QuadTree
@@ -43,7 +42,7 @@ public class QuadTreeNode
     private float minSize;
 
     private QuadTreeNode rootNode;
-    private byte[] neighbors;
+    public byte[] neighbors;
     private QuadTreeNode[] children; // 0:NW, 1:NE, 2:SW, 3:SE
 
     private QuadTreeSettings settings;
@@ -63,7 +62,7 @@ public class QuadTreeNode
         this.settings = settings;
     }
 
-    public void GenerateNode(List<QuadTreeNode> leaves )
+    public void GenerateNode(List<QuadTreeNode> leaves)
     {
         if (NodeCheck() && DistanceCheck()) {
             Split();
@@ -88,7 +87,8 @@ public class QuadTreeNode
     
     public bool NodeCheck()
     {
-        if (size.x / 2f >= minSize && depth < maxDepth) {
+        if (size.x / 2f >= minSize && depth < maxDepth)
+        {
             return true;
         }
         return false;
@@ -106,7 +106,7 @@ public class QuadTreeNode
         children[3] = new QuadTreeNode(center + new Vector3(-qtrSize.x, qtrSize.y, -qtrSize.z), halfSize, settings, rootNode, hash * 4 + 3, depth + 1,4);
     } 
     
-    public void CheckNeighbors()
+    public void CheckNeighbors() // east, west, north, south
     {
         neighbors = new byte[4];
         switch (corner) {

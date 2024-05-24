@@ -1,18 +1,18 @@
-﻿using System;
-using Unity.VisualScripting;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class TerrainChunk 
 {
     private QuadTree quadTree;
     public MeshData meshData;
 
+    public InfiniteTerrain terrain;
+
     public Vector2 coord;
     public Vector3 position;
 
     public GameObject chunk;
 
-    public bool visible;
+    public bool collidable = false;
     public bool meshRequested = false;
     
     public TerrainChunk(Vector2 chunkCoord, int size, QuadTreeSettings settings)
@@ -32,7 +32,9 @@ public class TerrainChunk
         ApplyMaterial(material);
 
         chunk.transform.SetParent(parent);
-        chunk.transform.localScale = Vector3.one; 
+        chunk.transform.localScale = Vector3.one;
+
+        terrain = parent.GetComponent<InfiniteTerrain>();
     }
 
     public void UpdateChunk(NoiseSettings noiseSettings)
@@ -41,7 +43,7 @@ public class TerrainChunk
         quadTree.GenerateTree();
 
         if (Application.isPlaying) {
-            QuadTreeMeshGenerator.RequestQuadTreeMesh(quadTree,noiseSettings,AppyMesh);
+            QuadTreeMeshGenerator.RequestQuadTreeMesh(quadTree,noiseSettings,ApplyMesh);
             meshRequested = true; 
         } else {
             meshData = QuadTreeMeshGenerator.GenerateMeshData(quadTree,noiseSettings);
@@ -49,11 +51,28 @@ public class TerrainChunk
         }
     }
 
-    public void AppyMesh(MeshData meshData)
+    public void ApplyCollisionMesh(Vector3 viewerPos)
+    {
+        MeshCollider mesh = chunk.GetComponent<MeshCollider>();
+        if (Vector3.Distance(viewerPos, quadTree.center) < quadTree.size.x * .8)
+        {
+            mesh.sharedMesh = meshData.CreateMesh();
+            mesh.enabled = true;
+            collidable = true;
+        }else if (collidable)
+        {
+            mesh.enabled = false;
+            collidable = false;
+        }
+    }
+
+    public void ApplyMesh(MeshData meshData)
     {
         meshRequested = false;
         this.meshData = meshData;
         chunk.GetComponent<MeshFilter>().mesh = meshData.CreateMesh(true);
+        
+        ApplyCollisionMesh(terrain.viewer.position);
     }
 
     public Vector3 CoordToPos(Vector2 coord, int size)
@@ -73,7 +92,6 @@ public class TerrainChunk
     public void setVisibility(bool visible)
     {
         chunk.SetActive(visible);
-        this.visible = visible;
     }
 
     public void OnDrawGizmos()
@@ -81,8 +99,6 @@ public class TerrainChunk
         //Chunk Borders
         Gizmos.color = Color.red;
         Gizmos.DrawWireCube(quadTree.center, quadTree.size);
-        
-        
     }
     
 }

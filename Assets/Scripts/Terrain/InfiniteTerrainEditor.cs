@@ -19,6 +19,4 @@ public class InfiniteTerrainEditor : Editor
             infiniteTerrain.ClearChunks();
         }
     }
-
-
 }
