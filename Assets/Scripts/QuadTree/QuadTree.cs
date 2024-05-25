@@ -1,6 +1,18 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
+public static class Direction {
+    public const int East = 0, West = 1, North = 2, South = 3;
+    /// <summary> East = 0, West = 1, North = 2, South = 3 </summary>
+    public const int E = 0, W = 1, N = 2, S = 3;
+}
+
+public static class Quadrant {
+    public const int NorthWest = 0, NorthEast = 1, SouthEast = 2, SouthWest = 3;
+    /// <summary> North West = 0, North East = 1, South East = 2, South West = 3 </summary>
+    public const int NW = 0, NE = 1, SE = 2, SW = 3;
+}
+
 public class QuadTree
 {
     public QuadTreeNode rootNode;
@@ -24,8 +36,20 @@ public class QuadTree
     {
         leaves.Clear();
         center = position + (size / 2);
+        center.y = 0;
         rootNode = new QuadTreeNode(center, size, settings);
         rootNode.GenerateNode(leaves);
+        foreach (QuadTreeNode leaf in leaves) {
+            leaf.CheckNeighbors(); 
+            
+        }
+    }
+
+    public void OnDrawGizmos()
+    {
+        foreach (QuadTreeNode leaf in leaves) {
+            leaf.OnDrawGizmos();
+        }
     }
 }
 
@@ -36,16 +60,18 @@ public class QuadTreeNode
     public Vector3 size;
     
     private uint hash;
-    private int depth;
-    private int corner;
+    public int depth;
+    public int corner;
     private int maxDepth;
     private float minSize;
 
     private QuadTreeNode rootNode;
-    public byte[] neighbors;
+    public bool[] neighbors;
     private QuadTreeNode[] children; // 0:NW, 1:NE, 2:SW, 3:SE
 
     private QuadTreeSettings settings;
+
+    private int LOD => maxDepth - depth;
     
     public QuadTreeNode(Vector3 center, Vector3 size, QuadTreeSettings settings, QuadTreeNode rootNode = null, uint hash = 1, int depth = 0, int corner = 0)
     {
@@ -70,7 +96,6 @@ public class QuadTreeNode
                 node.GenerateNode(leaves);
             }
         } else {
-            CheckNeighbors();
             leaves.Add(this);
         }
     }
@@ -78,8 +103,7 @@ public class QuadTreeNode
     public bool DistanceCheck()
     {
         float dist = Vector2.Distance(settings.viewerPosition, new Vector2(center.x,center.z));
-        if (dist < size.x * settings.distanceModifier)
-        {
+        if (dist < size.x * settings.distanceModifier) {
             return true;
         }
         return false;
@@ -87,8 +111,7 @@ public class QuadTreeNode
     
     public bool NodeCheck()
     {
-        if (size.x / 2f >= minSize && depth < maxDepth)
-        {
+        if (size.x / 2f >= minSize && depth < maxDepth) {
             return true;
         }
         return false;
@@ -100,76 +123,93 @@ public class QuadTreeNode
         Vector3 qtrSize = new Vector3(halfSize.x * 0.5f, halfSize.y, halfSize.z * 0.5f);
         children = new QuadTreeNode[4];
 
-        children[0] = new QuadTreeNode(center + new Vector3(-qtrSize.x, qtrSize.y, qtrSize.z), halfSize, settings, rootNode, hash * 4, depth + 1);
-        children[1] = new QuadTreeNode(center + new Vector3(qtrSize.x, qtrSize.y, qtrSize.z), halfSize, settings, rootNode, hash * 4 + 1, depth + 1,1);
-        children[2] = new QuadTreeNode(center + new Vector3(qtrSize.x, qtrSize.y, -qtrSize.z), halfSize, settings, rootNode, hash * 4 + 2, depth + 1,2);
-        children[3] = new QuadTreeNode(center + new Vector3(-qtrSize.x, qtrSize.y, -qtrSize.z), halfSize, settings, rootNode, hash * 4 + 3, depth + 1,4);
+        children[0] = new QuadTreeNode(center + new Vector3(-qtrSize.x, 0, qtrSize.z), halfSize, settings, rootNode, hash * 4, depth + 1,Quadrant.NW);
+        children[1] = new QuadTreeNode(center + new Vector3(qtrSize.x, 0, qtrSize.z), halfSize, settings, rootNode, hash * 4 + 1, depth + 1,Quadrant.NE);
+        children[2] = new QuadTreeNode(center + new Vector3(qtrSize.x, 0, -qtrSize.z), halfSize, settings, rootNode, hash * 4 + 2, depth + 1,Quadrant.SE);
+        children[3] = new QuadTreeNode(center + new Vector3(-qtrSize.x, 0, -qtrSize.z), halfSize, settings, rootNode, hash * 4 + 3, depth + 1,Quadrant.SW);
     } 
     
-    public void CheckNeighbors() // east, west, north, south
+    public void CheckNeighbors() 
     {
-        neighbors = new byte[4];
+        neighbors = new bool[4];
+        
         switch (corner) {
-            case 0:
-                neighbors[1] = CheckNeighborDepth(1,hash);
-                neighbors[2] = CheckNeighborDepth(2,hash);
+            case 0: //nw
+                neighbors[Direction.West] = CheckNeighborDepth(Direction.West,hash);
+                neighbors[Direction.North] = CheckNeighborDepth(Direction.North,hash);
                 break;
-            case 1:
-                neighbors[0] = CheckNeighborDepth(0,hash);
-                neighbors[2] = CheckNeighborDepth(2,hash);
+            case 1: //ne
+                neighbors[Direction.East] = CheckNeighborDepth(Direction.East,hash);
+                neighbors[Direction.North] = CheckNeighborDepth(Direction.North,hash);
                 break;
-            case 2:
-                neighbors[0] = CheckNeighborDepth(0,hash);
-                neighbors[3] = CheckNeighborDepth(3,hash);
+            case 2: //se
+                neighbors[Direction.East] = CheckNeighborDepth(Direction.East,hash);
+                neighbors[Direction.South] = CheckNeighborDepth(Direction.South,hash);
                 break;
-            case 3:
-                neighbors[1] = CheckNeighborDepth(1,hash);
-                neighbors[3] = CheckNeighborDepth(3,hash);
+            case 3: //sw
+                neighbors[Direction.West] = CheckNeighborDepth(Direction.West,hash);
+                neighbors[Direction.South] = CheckNeighborDepth(Direction.South,hash);
                 break;
         }
     }
 
-    private byte CheckNeighborDepth(int side, uint hash)
+    private bool CheckNeighborDepth(int direction, uint hash)
     {
         uint bitmask = 0;
         byte count = 0;
-        uint twoLast;
+        uint localQuadrant;
 
-        while (count < depth * 2) {
-            count += 2;
-            twoLast = (hash & 3);
+        while (count < depth) {
+            count += 1;
+            localQuadrant = (hash & 3);
+            bitmask *= 4;
 
-            bitmask = bitmask * 4;
-
-            if (side == 2 || side == 4) {
-                bitmask += 3;
-            } else {
-                bitmask += 1;
-            }
+            if (direction == 2 || direction == 3) { bitmask += 3; } 
+            else { bitmask += 1; }
             
-            if((side == 0 && (twoLast == 0 || twoLast == 3)) ||
-               (side == 1 && (twoLast == 1 || twoLast == 2)) || 
-               (side == 2 && (twoLast == 3 || twoLast == 2)) ||
-               (side == 3 && (twoLast == 0 || twoLast == 1))){ break; }
+            if ((direction == Direction.E && (localQuadrant == Quadrant.NW || localQuadrant == Quadrant.SW)) ||
+                (direction == Direction.W && (localQuadrant == Quadrant.NE || localQuadrant == Quadrant.SE)) ||
+                (direction == Direction.N && (localQuadrant == Quadrant.SW || localQuadrant == Quadrant.SE)) ||
+                (direction == Direction.S && (localQuadrant == Quadrant.NW || localQuadrant == Quadrant.NE))) 
+            { break; }
 
-            hash = hash >> 2;
+            hash >>= 2;
         }
 
-        if (rootNode.GetNeighborDepth(this.hash ^ bitmask, depth) < depth) {
-            return 1;
-        }
-        return 0;
+        return rootNode.GetNeighborDepth(this.hash ^ bitmask, depth) < depth;
     }
 
     public int GetNeighborDepth(uint queryHash, int targetDepth)
     {
+        int res = 0;
         if (hash == queryHash) {
-            return depth;
+            res = depth;
         } else {
-            if (children!=null) {
-                return children[((queryHash >> ((targetDepth - 1) * 2)) & 3)].GetNeighborDepth(queryHash, depth - 1);
-            }
+            if (children != null) {
+                res += children[((queryHash >> ((targetDepth - 1) * 2)) & 3)].GetNeighborDepth(queryHash, (targetDepth - 1));
+            } 
         }
-        return 0;
+        return res;
+    }
+
+    public void OnDrawGizmos()
+    {
+        Gradient gradient = new Gradient();
+        
+        var colors = new GradientColorKey[2];
+        colors[0] = new GradientColorKey(Color.blue, 0.0f);
+        colors[1] = new GradientColorKey(Color.red, 1.0f);
+
+        var alphas = new GradientAlphaKey[2];
+        alphas[0] = new GradientAlphaKey(1.0f, 0.0f);
+        alphas[1] = new GradientAlphaKey(0.0f, 1.0f);
+
+        gradient.SetKeys(colors,alphas);
+        float a = (float)depth / maxDepth;
+        Color result = gradient.Evaluate(a);
+        result.a = 0.3f;
+       
+        Gizmos.color = result;
+        Gizmos.DrawCube(center,size);
     }
 }

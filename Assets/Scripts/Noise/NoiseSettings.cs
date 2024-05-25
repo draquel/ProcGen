@@ -12,7 +12,7 @@ public class NoiseSettings{
     [Header("General")]
 	[Range(-1000000,1000000)]
 	public int seed;
-    [Range(0.1f,1000f)]
+    [Range(0.1f,10000f)]
 	public float scale = 50f;
     [Range(0.01f,2f)]
 	public float gain = 0.5f;
@@ -38,26 +38,26 @@ public class NoiseSettings{
 	public float warpStrength = 10f;
 
 	public void copy(NoiseSettings source, bool disableDomainWarping = true){
-        this.noiseMode = source.noiseMode;
-        this.filterMode = source.filterMode;
-        this.normalizeMode = source.normalizeMode;
+        noiseMode = source.noiseMode;
+        filterMode = source.filterMode;
+        normalizeMode = source.normalizeMode;
 
-		this.seed = source.seed;
-		this.scale = source.scale;
-        this.gain = source.gain;
-		this.offset = source.offset;
+		seed = source.seed;
+		scale = source.scale;
+        gain = source.gain;
+		offset = source.offset;
 		
-		this.octaves = source.octaves;
-		this.lacunarity = source.lacunarity;
+		octaves = source.octaves;
+		lacunarity = source.lacunarity;
 
-        this.layerCount = source.layerCount;
-        this.strength = source.strength;
-        this.baseRoughness = source.baseRoughness;
-        this.roughness = source.roughness;
-        this.minValue = source.minValue;
-        this.weightMultiplier = source.weightMultiplier;
+        layerCount = source.layerCount;
+        strength = source.strength;
+        baseRoughness = source.baseRoughness;
+        roughness = source.roughness;
+        minValue = source.minValue;
+        weightMultiplier = source.weightMultiplier;
 
-		this.useDomainWarping = (disableDomainWarping ? false : source.useDomainWarping);
-		this.warpStrength = source.warpStrength;
+		useDomainWarping = (disableDomainWarping ? false : source.useDomainWarping);
+		warpStrength = source.warpStrength;
 	}
 }

@@ -58,8 +58,13 @@ public class InfiniteTerrain : MonoBehaviour
             Vector2 chunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordZ + zOffset);
             if (terrainChunkDictionary.ContainsKey(chunkCoord)) {
                terrainChunkDictionary[chunkCoord].UpdateChunk(noiseSettings);
-            } else {
-               terrainChunkDictionary.Add(chunkCoord,new TerrainChunk(chunkCoord,chunkSize,quadTreeSettings));
+            } else
+            {
+               GameObject chunkGO = new GameObject();
+               TerrainChunk chunk = chunkGO.AddComponent<TerrainChunk>();
+               chunk.Init(chunkCoord,chunkSize,quadTreeSettings);
+
+               terrainChunkDictionary.Add(chunkCoord,chunk);
                terrainChunkDictionary[chunkCoord].Build(gameObject.transform,material); 
                terrainChunkDictionary[chunkCoord].UpdateChunk(noiseSettings); 
             }
@@ -87,7 +92,17 @@ public class InfiniteTerrain : MonoBehaviour
    {
       foreach (var item in terrainChunkDictionary)
       {
-         item.Value.OnDrawGizmos();
+         //item.Value.OnDrawGizmos();
+         
+         //Chunk Borders
+         Vector3 gsize = item.Value.quadTree.size;
+         gsize.y *= item.Value.quadTree.settings.heightMultiplier/2;
+
+         Vector3 gcenter = item.Value.quadTree.center;
+         gcenter.y *= item.Value.quadTree.settings.heightMultiplier/2; 
+        
+         Gizmos.color = Color.red;
+         Gizmos.DrawWireCube(gcenter, gsize);
       }
    }
 }

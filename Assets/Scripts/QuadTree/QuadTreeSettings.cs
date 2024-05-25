@@ -11,9 +11,11 @@ public class QuadTreeSettings
     public float heightMultiplier = 25f;
     [Min(1)]
     public float scale;
+
     
     [Header("Level of Detail")]
     public int resolution = 4;
     public int distanceModifier = 5;
     public Vector2 viewerPosition;
+    public bool useInterpolation = false;
 }
