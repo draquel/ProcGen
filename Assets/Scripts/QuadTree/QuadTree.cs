@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public static class Direction {
@@ -30,19 +31,33 @@ public class QuadTree
         this.position = position;
         leaves = new List<QuadTreeNode>();
         this.settings = settings;
+        
+        center = position + (size / 2);
+        center.y = settings.heightMultiplier/2;
     }
 
     public void GenerateTree()
     {
         leaves.Clear();
         center = position + (size / 2);
-        center.y = 0;
+        center.y = settings.heightMultiplier/2;
         rootNode = new QuadTreeNode(center, size, settings);
         rootNode.GenerateNode(leaves);
         foreach (QuadTreeNode leaf in leaves) {
             leaf.CheckNeighbors(); 
-            
         }
+    }
+
+    public int GetDepth()
+    {
+        int depth = 0;
+        foreach (QuadTreeNode leaf in leaves)
+        {
+            if(depth < leaf.depth)
+                depth = leaf.depth;
+        }
+        //Debug.Log("QuadTree.GetDepth(): ");
+        return depth;
     }
 
     public void OnDrawGizmos()
@@ -63,16 +78,17 @@ public class QuadTreeNode
     public int depth;
     public int corner;
     private int maxDepth;
-    private float minSize;
+    private int minSize;
 
     private QuadTreeNode rootNode;
     public bool[] neighbors;
-    private QuadTreeNode[] children; // 0:NW, 1:NE, 2:SW, 3:SE
+    private QuadTreeNode[] children; 
 
     private QuadTreeSettings settings;
 
-    private int LOD => maxDepth - depth;
-    
+    //private Camera cam;
+    private Plane[] planes;
+
     public QuadTreeNode(Vector3 center, Vector3 size, QuadTreeSettings settings, QuadTreeNode rootNode = null, uint hash = 1, int depth = 0, int corner = 0)
     {
         children = null;
@@ -84,8 +100,10 @@ public class QuadTreeNode
         this.corner = corner;
         maxDepth = settings.maxDepth;
         minSize = settings.minSize;
-        bounds = new Bounds(this.center,size);
+        bounds = new Bounds(this.center,this.size);
         this.settings = settings;
+        
+        planes = GeometryUtility.CalculateFrustumPlanes(this.settings.camera);
     }
 
     public void GenerateNode(List<QuadTreeNode> leaves)
@@ -96,7 +114,18 @@ public class QuadTreeNode
                 node.GenerateNode(leaves);
             }
         } else {
-            leaves.Add(this);
+            if (settings.enableOcclusion)
+            {
+                Plane[] planes = FrustrumUtility.ScalePlanes(this.planes,1.2f);
+                planes = FrustrumUtility.MovePlanes(planes,settings.minSize*settings.minSize*settings.distanceModifier,-settings.viewerForward);
+                if (FrustrumUtility.IsPartiallyInFrustum(planes,bounds)) {
+                    leaves.Add(this);
+                }
+            }
+            else {
+                leaves.Add(this);
+            }
+
         }
     }
 

@@ -13,6 +13,9 @@ public class NoiseMapRenderer : MonoBehaviour
 
     [Header("Generator Settings")]
     public NoiseMapSettings noiseMapSettings;
+    public DensityMapSettings densityMapSettings;
+    public QuadTreeSettings quadTreeSettings;
+    public MarchingCubesSettings marchingCubesSettings;
     public bool autoUpdate;
 
     public GameObject player;
@@ -33,8 +36,8 @@ public class NoiseMapRenderer : MonoBehaviour
         if (renderMode == RenderMode.QuadTree)
         {
             UpdatePlayerPos();
-            if (Vector3.Distance(lastPlayerPos, noiseMapSettings.quadTreeSettings.viewerPosition) >
-                noiseMapSettings.quadTreeSettings.minSize)
+            if (Vector3.Distance(lastPlayerPos, quadTreeSettings.viewerPosition) >
+                quadTreeSettings.minSize)
             {
                 DrawQuads();
             }
@@ -44,20 +47,20 @@ public class NoiseMapRenderer : MonoBehaviour
     public void UpdatePlayerPos()
     {
         lastPlayerPos = player.transform.position;
-        noiseMapSettings.quadTreeSettings.viewerPosition = new Vector2(lastPlayerPos.x, lastPlayerPos.z);
+        quadTreeSettings.viewerPosition = new Vector2(lastPlayerPos.x, lastPlayerPos.z);
     }
 
     public void DrawDensityMap()
     {
-        DensityMap densityMap = NoiseMapGenerator.GenerateDensityMap(noiseMapSettings);
-        MeshData meshData = MarchingCubes.March(densityMap, noiseMapSettings.marchingCubesSettings);
+        DensityMap densityMap = NoiseMapGenerator.GenerateDensityMap(densityMapSettings);
+        MeshData meshData = MarchingCubes.March(densityMap, marchingCubesSettings);
 
         BuildChunk(meshData);
     }
 
     public void DrawQuads()
     {
-        QuadTree tree = new QuadTree(noiseMapSettings.position,noiseMapSettings.mapSize,noiseMapSettings.quadTreeSettings);
+        QuadTree tree = new QuadTree(noiseMapSettings.position,noiseMapSettings.mapSize,quadTreeSettings);
         tree.GenerateTree();
         MeshData meshData = QuadTreeMeshGenerator.GenerateMeshData(tree,noiseMapSettings.noiseSettings);
 

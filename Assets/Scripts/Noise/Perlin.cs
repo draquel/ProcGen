@@ -28,10 +28,10 @@ public static class Perlin
         y -= Mathf.Floor(y);
         var u = Fade(x);
         var v = Fade(y);
-        var A = (perm[X  ] + Y) & 0xff;
+        var A = (perm[X] + Y) & 0xff;
         var B = (perm[X+1] + Y) & 0xff;
-        return Lerp(v, Lerp(u, Grad(perm[A  ], x, y  ), Grad(perm[B  ], x-1, y  )),
-                       Lerp(u, Grad(perm[A+1], x, y-1), Grad(perm[B+1], x-1, y-1)));
+        return Lerp(v, Lerp(u, Grad(perm[A], x, y), Grad(perm[B], x-1, y)),
+             Lerp(u, Grad(perm[A+1], x, y-1), Grad(perm[B+1], x-1, y-1)));
     }
 
     public static float Noise(Vector2 coord)
@@ -56,10 +56,10 @@ public static class Perlin
         var BA = (perm[B  ] + Z) & 0xff;
         var AB = (perm[A+1] + Z) & 0xff;
         var BB = (perm[B+1] + Z) & 0xff;
-        return Lerp(w, Lerp(v, Lerp(u, Grad(perm[AA  ], x, y  , z  ), Grad(perm[BA  ], x-1, y  , z  )),
-                               Lerp(u, Grad(perm[AB  ], x, y-1, z  ), Grad(perm[BB  ], x-1, y-1, z  ))),
-                       Lerp(v, Lerp(u, Grad(perm[AA+1], x, y  , z-1), Grad(perm[BA+1], x-1, y  , z-1)),
-                               Lerp(u, Grad(perm[AB+1], x, y-1, z-1), Grad(perm[BB+1], x-1, y-1, z-1))));
+        return Lerp(w, Lerp(v, Lerp(u, Grad(perm[AA], x, y, z), Grad(perm[BA], x-1, y, z)),
+             Lerp(u, Grad(perm[AB], x, y-1, z), Grad(perm[BB], x-1, y-1, z))),
+             Lerp(v, Lerp(u, Grad(perm[AA+1], x, y, z-1), Grad(perm[BA+1], x-1, y, z-1)),
+             Lerp(u, Grad(perm[AB+1], x, y-1, z-1), Grad(perm[BB+1], x-1, y-1, z-1))));
     }
 
     public static float Noise(Vector3 coord)
@@ -69,54 +69,69 @@ public static class Perlin
 
     #endregion
 
-    #region fBm functions
+    #region fbm functions
 
-    public static float Fbm(float x, int octave, float gain = 2f, float lacunarity = 0.5f)
+    public static float Fbm(float x, int octaves, float lacunarity, float persistence)
     {
-        var f = 0.0f;
-        var w = 0.5f;
-        for (var i = 0; i < octave; i++) {
-            f += w * Noise(x);
-            x *= lacunarity;
-            w *= gain;
+        float total = 0.0f;
+        float frequency = 1.0f;
+        float amplitude = 1.0f;
+        float maxAmplitude = 0.0f;
+
+        for (int i = 0; i < octaves; i++) {
+            total += Noise(x * frequency) * amplitude;
+            frequency *= lacunarity;
+            maxAmplitude += amplitude;
+            amplitude *= persistence;
         }
-        return f;
+
+        return total / maxAmplitude; 
     }
 
-    public static float Fbm(Vector2 coord, int octave, float gain, float lacunarity)
+    public static float Fbm(Vector2 coord, int octaves, float lacunarity, float persistence)
     {
-        var f = 0.0f;
-        var w = 0.5f;
-        for (var i = 0; i < octave; i++) {
-            f += w * Noise(coord);
-            coord *= lacunarity;
-            w *= gain;
+        return Fbm(coord.x,coord.y,octaves,lacunarity,persistence);
+    }
+
+    public static float Fbm(float x, float y, int octaves, float lacunarity,float persistence)
+    {
+        float total = 0.0f;
+        float frequency = 1.0f;
+        float amplitude = 1.0f;
+        float maxAmplitude = 0.0f;
+
+        for (int i = 0; i < octaves; i++) {
+            total += Noise(x * frequency, y * frequency) * amplitude;
+            frequency *= lacunarity;
+            maxAmplitude += amplitude;
+            amplitude *= persistence;
         }
-        return f;
+
+        return total / maxAmplitude; 
     }
 
-    public static float Fbm(float x, float y, int octave, float gain, float lacunarity)
+    public static float Fbm(Vector3 coord, int octaves, float lacunarity, float persistence)
     {
-        return Fbm(new Vector2(x, y), octave, gain, lacunarity);
+        return Fbm(coord.x, coord.y, coord.z, octaves, lacunarity, persistence);
     }
 
-    public static float Fbm(Vector3 coord, int octave, float gain = 2f, float lacunarity = 0.5f)
+    public static float Fbm(float x, float y, float z, int octaves, float lacunarity, float persistence)
     {
-        var f = 0.0f;
-        var w = 0.5f;
-        for (var i = 0; i < octave; i++) {
-            f += w * Noise(coord);
-            coord *= lacunarity;
-            w *= gain;
+        float total = 0.0f;
+        float frequency = 1.0f;
+        float amplitude = 1.0f;
+        float maxAmplitude = 0.0f;
+
+        for (int i = 0; i < octaves; i++) {
+            total += Noise(x * frequency, y * frequency, z * frequency) * amplitude;
+            frequency *= lacunarity;
+            maxAmplitude += amplitude;
+            amplitude *= persistence;
         }
-        return f;
-    }
 
-    public static float Fbm(float x, float y, float z, int octave, float gain = 2f, float lacunarity = 0.5f)
-    {
-        return Fbm(new Vector3(x, y, z), octave, gain, lacunarity);
+        return total / maxAmplitude;
     }
-
+    
     #endregion
 
     #region Private functions
@@ -149,7 +164,7 @@ public static class Perlin
         return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
     }
 
-    static int[] perm = {
+    public static int[] perm = {
         151,160,137,91,90,15,
         131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
         190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
@@ -165,6 +180,6 @@ public static class Perlin
         138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,
         151
     };
-
+    
     #endregion
 }

@@ -14,16 +14,18 @@ public class NoiseSettings{
 	public int seed;
     [Range(0.1f,10000f)]
 	public float scale = 50f;
-    [Range(0.01f,2f)]
-	public float gain = 0.5f;
     public Vector3 offset;
     [Header("Perlin")]
     [Range(0,5)]
 	public int octaves = 3;
     [Range(1,3)]
 	public float lacunarity = 2f;
-
-    [Header("Simplex")]
+	[Min(0.01f)]
+	public float persistence = 1f;
+	
+	[Header("Simplex")]
+	[Range(0.01f,2f)]
+	public float gain = 0.5f;
 	[Range(1,8)]
 	public int layerCount = 1;
 	public float strength = 1f;

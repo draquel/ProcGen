@@ -37,19 +37,19 @@ public static class Noise
             break;
             case FilterMode.None:
             default:
-                value = Perlin.Fbm(point, settings.octaves, settings.gain, settings.lacunarity); 
+                value = Perlin.Fbm(point, settings.octaves, settings.lacunarity, settings.persistence); 
             break;
         }
         return value;
     }
 
     public static float PerlinSimpleEvaluate(Vector3 point,NoiseSettings settings){
-        return normalize(Perlin.Fbm(point,settings.octaves,settings.gain,settings.lacunarity),settings.normalizeMode);
+        return normalize(Perlin.Fbm(point,settings.octaves,settings.lacunarity, settings.persistence),settings.normalizeMode);
     }
 
     private static float PerlinRigidEvaluate(Vector3 point, NoiseSettings settings)
     {
-        return normalizeRigid(Perlin.Fbm(point,settings.octaves,settings.gain,settings.lacunarity),settings.normalizeMode);
+        return normalizeRigid(Perlin.Fbm(point,settings.octaves,settings.lacunarity, settings.persistence),settings.normalizeMode);
     }
 
     //SIMPLEX

@@ -213,10 +213,11 @@ MonoBehaviour:
       LocalNormalization: 0
       seed: 0
       scale: 400
-      gain: 1
       offset: {x: 0, y: 0, z: 0}
       octaves: 2
       lacunarity: 1.5
+      persistence: 1
+      gain: 1
       layerCount: 1
       strength: 1
       baseRoughness: 1
@@ -234,9 +235,13 @@ MonoBehaviour:
       maxDepth: 6
       heightMultiplier: 200
       scale: 0
+      viewerPosition: {x: 0, y: 0}
       resolution: 4
       distanceModifier: 2
-      viewerPosition: {x: 0, y: 0}
+      useInterpolation: 0
+      enableOcclusion: 0
+      viewerForward: {x: 0, y: 0, z: 0}
+      camera: {fileID: 0}
   autoUpdate: 0
   player: {fileID: 628270929}
 --- !u!1 &280834539
@@ -1000,7 +1005,7 @@ MonoBehaviour:
   material: {fileID: 2100000, guid: afa6e0563f0c65344b8d6ffa32a7a83b, type: 2}
   noiseMapSettings:
     mapSize: {x: 100, y: 1, z: 100}
-    position: {x: 13.8, y: -155.2, z: -316.6}
+    position: {x: 13.8, y: -128.93, z: -316.6}
     densityFunction: 0
     sphereRadius: 20
     gradient:
@@ -1030,20 +1035,21 @@ MonoBehaviour:
       atime6: 0
       atime7: 0
       m_Mode: 0
-      m_ColorSpace: -1
+      m_ColorSpace: 0
       m_NumColorKeys: 7
       m_NumAlphaKeys: 2
     noiseSettings:
       noiseMode: 0
       filterMode: 0
-      normalizeMode: 1
+      normalizeMode: 0
       LocalNormalization: 1
       seed: 0
-      scale: 50
-      gain: 0.5
-      offset: {x: 0, y: 0, z: 0}
-      octaves: 3
-      lacunarity: 2
+      scale: 10
+      offset: {x: 23.76, y: -30.61, z: 52.37}
+      octaves: 4
+      lacunarity: 1.346
+      persistence: 0.1
+      gain: 1.223
       layerCount: 1
       strength: 1
       baseRoughness: 1
@@ -1061,9 +1067,13 @@ MonoBehaviour:
       maxDepth: 0
       heightMultiplier: 25
       scale: 0
+      viewerPosition: {x: 0, y: 0}
       resolution: 4
       distanceModifier: 5
-      viewerPosition: {x: 0, y: 0}
+      useInterpolation: 0
+      enableOcclusion: 0
+      viewerForward: {x: 0, y: 0, z: 0}
+      camera: {fileID: 0}
   autoUpdate: 1
   player: {fileID: 0}
 --- !u!4 &1046634669
