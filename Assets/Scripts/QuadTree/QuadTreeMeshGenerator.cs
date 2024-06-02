@@ -32,8 +32,6 @@ public static class QuadTreeMeshGenerator
             meshData.AddVertex(new Vector3(negX, y7, negZ)); //7
             int index = zeroIndex + 4;
     
-            
-            
             //edges & triangles
             if (!leaf.neighbors[Direction.North]) {
                 float y2 = 0;
@@ -244,8 +242,6 @@ public static class QuadTreeMeshGenerator
     
         return meshData;
     }
-    
-    
 
     public static void RequestQuadTreeMesh(QuadTree tree, NoiseSettings settings, Action<MeshData> callback, int depthFilter = 0)
     {

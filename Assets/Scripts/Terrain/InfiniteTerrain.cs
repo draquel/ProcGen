@@ -18,6 +18,7 @@ public class InfiniteTerrain : MonoBehaviour
    private Quaternion viewerLastRot;
 
 
+   public GameObject GrassPrefab;
    public ComputeShader noiseComputeShader;
    public NoiseSettings noiseSettings;
    public QuadTreeSettings quadTreeSettings;

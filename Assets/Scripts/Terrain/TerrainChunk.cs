@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class TerrainChunk : MonoBehaviour 
 {
@@ -23,12 +26,24 @@ public class TerrainChunk : MonoBehaviour
     public Material material;
 
     private ComputeShader noiseShader;
+    private GameObject GrassPrefab;
+    //private bool hasGrass = false;
     
     private NoiseMapSettings _noiseMapSettings;
     private NoiseMap _noiseMap;
 
-    public RenderTexture _texture;
-    public Texture2D noise;
+    // public RenderTexture _texture;
+    // public Texture2D noise;
+
+    private List<Vector2> grassPoints = new List<Vector2>();
+    public Mesh grassMesh;
+    public Material grassMaterial;
+    private List<List<Matrix4x4>> Batches = new List<List<Matrix4x4>>();
+
+    public void Update()
+    {
+        RenderBatches();
+    }
 
     public void Init(Vector2 chunkCoord, int chunkSize, Material chunkMaterial, QuadTreeSettings settings)
     {
@@ -44,19 +59,21 @@ public class TerrainChunk : MonoBehaviour
         _meshRenderer = gameObject.AddComponent<MeshRenderer>();
         _meshCollider = gameObject.AddComponent<MeshCollider>();
 
-        _texture = new RenderTexture(size+10, size+10, 0,RenderTextureFormat.ARGBFloat);
-        _texture.enableRandomWrite = true;
-        _texture.wrapMode = TextureWrapMode.Repeat;
-        _texture.filterMode = FilterMode.Point;
-        _texture.Create();
+        grassPoints = PoissonDiscSampling.GeneratePoints(2, Vector2.one * size);
+        CreateGrass();
+        // _texture = new RenderTexture(size+10, size+10, 0,RenderTextureFormat.ARGBFloat);
+        // _texture.enableRandomWrite = true;
+        // _texture.wrapMode = TextureWrapMode.Repeat;
+        // _texture.filterMode = FilterMode.Point;
+        // _texture.Create();
 
-        noise = new Texture2D(size+10, size+10,TextureFormat.ARGB32,false);
-        noise.wrapMode = TextureWrapMode.Repeat;
-        noise.filterMode = FilterMode.Point;
-
-        noiseShader = _terrain.noiseComputeShader;
-        int kernel = noiseShader.FindKernel("Perlin2");
-        noiseShader.SetTexture(kernel,"Result", _texture);
+        // noise = new Texture2D(size+10, size+10,TextureFormat.ARGB32,false);
+        // noise.wrapMode = TextureWrapMode.Repeat;
+        // noise.filterMode = FilterMode.Point;
+        //
+        // noiseShader = _terrain.noiseComputeShader;
+        // int kernel = noiseShader.FindKernel("Perlin2");
+        // noiseShader.SetTexture(kernel,"Result", _texture);
         
         material = new Material(chunkMaterial);
         ApplyMaterial();
@@ -101,7 +118,64 @@ public class TerrainChunk : MonoBehaviour
 
         return texture;
     }
+
+    public void CreateWater()
+    {
+        
+    }
+
+    private void RenderBatches()
+    {
+        foreach (var batch in Batches)
+        {
+            Graphics.DrawMeshInstanced(grassMesh, 0, grassMaterial, batch);
+        }
+    }
     
+    public void CreateGrass()
+    {
+        // ClearGrass();
+        int addedMatricies = 0;
+        Batches = new List<List<Matrix4x4>>(); 
+        Batches.Add(new List<Matrix4x4>());
+        foreach (Vector2 point in grassPoints)
+        {
+            RaycastHit hit;
+            Vector3 start = new Vector3(point.x, 500, point.y);
+            float minH = 0.33f * quadTree.settings.heightMultiplier;
+            float maxH = 0.66f * quadTree.settings.heightMultiplier;
+ 
+            if (Physics.Raycast(position+start,transform.TransformDirection(Vector3.down),out hit,Mathf.Infinity))
+            {
+                Vector3 pos = position + start - new Vector3(0, hit.distance, 0);
+                if (pos.y > minH && pos.y < maxH)
+                {
+                    if (addedMatricies < 1000)
+                    {
+                        Batches[Batches.Count - 1].Add(Matrix4x4.TRS(pos, Quaternion.AngleAxis(Random.Range(0,360), Vector3.up), Vector3.one)); 
+                        addedMatricies += 1;
+                    } else {
+                        Batches.Add(new List<Matrix4x4>());
+                        Batches[Batches.Count - 1].Add(Matrix4x4.TRS(pos,  Quaternion.AngleAxis(Random.Range(0,360), Vector3.up), Vector3.one)); 
+                        addedMatricies = 1;
+                    }
+                    //Instantiate(_terrain.GrassPrefab,pos,Quaternion.identity,transform);
+                }
+            }
+        }
+    }
+
+    public void ClearGrass()
+    {
+        var children = new List<GameObject>();
+        foreach (Transform child in transform) children.Add(child.gameObject);
+        if (Application.isPlaying) {
+            children.ForEach(child => Destroy(child));
+        } else {
+            children.ForEach(child => DestroyImmediate(child)); 
+        }
+    }
+
     public void GenerateMesh(NoiseSettings settings)
     {
         quadTree.GenerateTree();
@@ -133,27 +207,28 @@ public class TerrainChunk : MonoBehaviour
         //if (!hasNoise || !_terrain.enableCaching) { GenerateNoise(noiseSettings); }
         setVisibility(true); 
     
-        if (ViewerDistanceCheck() && !collisionMeshRequested) {
+        if (ViewerDistanceCheck()) {
             GenerateCollisionMesh(noiseSettings);
         } else {
             _meshCollider.enabled = false;
+        }
+
+        if (hasCollisionMesh) {
+            CreateGrass();
         }
     }
 
     public void GenerateCollisionMesh(NoiseSettings noiseSettings)
     {
-        if (!hasCollisionMesh)
-        {
-            // int resolution = size / (quadTree.settings.minSize/2);
-            // _meshCollider.sharedMesh = RectMeshGenerator.GenerateMeshData(noise,position,size,size,resolution,resolution,noiseSettings,quadTree.settings.heightMultiplier).CreateMesh();
-            //_meshCollider.sharedMesh = QuadTreeMeshGenerator.GenerateMeshData(quadTree, noise).CreateMesh();
-            //_meshCollider.sharedMesh = _meshFilter.mesh;
-    
-            if (Application.isPlaying) {
-                QuadTreeMeshGenerator.RequestQuadTreeMesh(quadTree,noiseSettings,ApplyCollisionMesh,quadTree.GetDepth());
-            } else {
-                ApplyCollisionMesh(QuadTreeMeshGenerator.GenerateMeshData(quadTree,noiseSettings,quadTree.GetDepth()));
-            }
+        // int resolution = size / (quadTree.settings.minSize/2);
+        // _meshCollider.sharedMesh = RectMeshGenerator.GenerateMeshData(noise,position,size,size,resolution,resolution,noiseSettings,quadTree.settings.heightMultiplier).CreateMesh();
+        //_meshCollider.sharedMesh = QuadTreeMeshGenerator.GenerateMeshData(quadTree, noise).CreateMesh();
+        //_meshCollider.sharedMesh = _meshFilter.mesh;
+
+        if (Application.isPlaying) {
+            QuadTreeMeshGenerator.RequestQuadTreeMesh(quadTree,noiseSettings,ApplyCollisionMesh,quadTree.GetDepth());
+        } else {
+            ApplyCollisionMesh(QuadTreeMeshGenerator.GenerateMeshData(quadTree,noiseSettings,quadTree.GetDepth()));
         }
     }
 
@@ -174,6 +249,7 @@ public class TerrainChunk : MonoBehaviour
         _meshCollider.sharedMesh = meshData.CreateMesh(true);
         _meshCollider.enabled = true;
         collisionMeshRequested = false;
+        hasCollisionMesh = true;
     }
 
     private void ApplyMaterial()
@@ -224,7 +300,7 @@ public class TerrainChunk : MonoBehaviour
     
     void OnDestroy()
     {
-       _texture.Release(); 
+        //_texture.Release(); 
     }
 
     private void OnDisable()
