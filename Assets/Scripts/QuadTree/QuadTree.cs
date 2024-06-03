@@ -204,7 +204,8 @@ public class QuadTreeNode
             hash >>= 2;
         }
 
-        return rootNode.GetNeighborDepth(this.hash ^ bitmask, depth) < depth;
+        int nd = rootNode.GetNeighborDepth(this.hash ^ bitmask, depth);
+        return  nd < depth || nd == 0;
     }
 
     public int GetNeighborDepth(uint queryHash, int targetDepth)
