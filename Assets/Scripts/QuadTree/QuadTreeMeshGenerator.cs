@@ -245,6 +245,8 @@ public static class QuadTreeMeshGenerator
     
         return meshData;
     }
+    
+    private static float interpolate(float p1, float p2, float fraction) { return p1 + (p2 - p1) * fraction; } 
 
     public static void RequestQuadTreeMesh(QuadTree tree, NoiseSettings settings, Action<MeshData> callback, int depthFilter = 0)
     {
@@ -257,6 +259,22 @@ public static class QuadTreeMeshGenerator
     public static void QuadTreeMeshThread(QuadTree tree, NoiseSettings settings, Action<MeshData> callback, int depthFilter = 0)
     {
         MeshData data = GenerateMeshData(tree, settings, depthFilter);
+        lock (QuadTreemeshThreadQueue) {
+            QuadTreemeshThreadQueue.Enqueue(new QuadTreeMeshThreadData<MeshData>(callback, data));
+        }
+    }
+   
+    public static void RequestQuadTreeMesh(QuadTree tree, Texture2D noise, Action<MeshData> callback, int depthFilter = 0)
+    {
+        ThreadStart threadStart = delegate {
+            QuadTreeMeshThread(tree, noise, callback, depthFilter);
+        };
+        new Thread(threadStart).Start();
+    }
+
+    public static void QuadTreeMeshThread(QuadTree tree, Texture2D noise, Action<MeshData> callback, int depthFilter = 0)
+    {
+        MeshData data = GenerateMeshData(tree, noise, depthFilter);
         lock (QuadTreemeshThreadQueue) {
             QuadTreemeshThreadQueue.Enqueue(new QuadTreeMeshThreadData<MeshData>(callback, data));
         }
@@ -298,5 +316,5 @@ public static class QuadTreeMeshGenerator
             }
         }
     }
-    private static float interpolate(float p1, float p2, float fraction) { return p1 + (p2 - p1) * fraction; }
+    
 } 
