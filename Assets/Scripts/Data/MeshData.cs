@@ -3,9 +3,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-
-
-
 public class MeshData {
     public List<Vector3> vertices = new List<Vector3>();
     public List<int> triangles = new List<int>();
@@ -104,7 +101,7 @@ public class MeshData {
     public int localizeDimension(float input, float size)
     {
         int res = (int)(input % size);
-        if(input < 0 && res != 0){
+        if(input < 0){
             res += (int)size;
         } 
         return res;
