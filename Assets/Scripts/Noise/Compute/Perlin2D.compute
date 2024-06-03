@@ -75,7 +75,7 @@ float BrownianMotion(float x, float y, int octaves, float lacunarity, float pers
     return total / maxAmplitude;
 }
 
-float TileablePerlinNoise(float x, float y, float z, int width, int height)
+float TileablePerlinNoise(float x, float y, int width, int height)
 {
     float repeatX = x * (width / float(width));
     float repeatY = y * (height / float(height));
@@ -143,9 +143,9 @@ void Perlin2 (uint3 id : SV_DispatchThreadID)
     float y = (position.y + offset.y) / scale;
     float z = (position.z + mapPos.y + offset.z) / scale;
 
-    //float noise = PerlinNoise(x+offset.x, y+offset.z);
-    float noise = BrownianMotion(x, y, z, octaves, lacunarity, persistence);
-    //float noise = TileablePerlinNoise(x+offset.x,y+offset.z,width,height);
+    //float noise = PerlinNoise(x,z);
+    float noise = BrownianMotion(x, z, octaves, lacunarity, persistence);
+    //float noise = TileablePerlinNoise(x,y,width,height);
 
     // Store the result in the texture
     Result[id.xy] = float4(noise, 0.0, 0.0, 1.0);
