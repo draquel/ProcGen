@@ -1,7 +1,12 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using UnityEngine;
 
 public static class RectMeshGenerator
 {
+    public static readonly Queue<RectMeshThreadData<MeshData>> RectMeshThreadQueue = new Queue<RectMeshThreadData<MeshData>>();
+    
     public static MeshData GenerateMeshData(Vector3 position, float width, float height, int widthSegments = 1, int heightSegments = 1)
     {
         MeshData meshData = new MeshData();
@@ -91,6 +96,43 @@ public static class RectMeshGenerator
         }
 
         return meshData;
+    }
+    
+    public static void RequestRectMesh(Vector3 position, float width, float height, Action<MeshData> callback, int widthSegments = 1, int heightSegments = 1)
+    {
+        ThreadStart threadStart = delegate {
+            RectMeshThread(position, width, height, callback, widthSegments, heightSegments);
+        };
+        new Thread(threadStart).Start();
+    }
+
+    public static void RectMeshThread(Vector3 position, float width, float height, Action<MeshData> callback, int widthSegments = 1, int heightSegments = 1)
+    {
+        MeshData data = GenerateMeshData(position, width, height, widthSegments, heightSegments);
+        lock (RectMeshThreadQueue) {
+            RectMeshThreadQueue.Enqueue(new RectMeshThreadData<MeshData>(callback, data));
+        }
+    }
+    
+    public struct RectMeshThreadData<T>
+    {
+        public readonly Action<T> callback;
+        public readonly T parameter;
+
+        public RectMeshThreadData(Action<T> callback, T parameter) {
+            this.callback = callback;
+            this.parameter = parameter;
+        }
+    }
+
+    public static void ProcessThreadQueue()
+    {
+        if (RectMeshThreadQueue.Count > 0) {
+            for (int i = 0; i < RectMeshThreadQueue.Count; i++) {
+                RectMeshThreadData<MeshData> threadData = RectMeshThreadQueue.Dequeue();
+                threadData.callback(threadData.parameter);
+            }
+        }
     }
 }
 
