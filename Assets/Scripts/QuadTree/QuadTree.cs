@@ -32,14 +32,14 @@ public class QuadTree
         this.settings = settings;
         
         center = position + (size / 2);
-        center.y = settings.heightMultiplier/2;
+         center.y -= settings.heightMultiplier;
     }
 
     public void GenerateTree()
     {
         leaves.Clear();
-        center = position + (size / 2);
-        center.y = settings.heightMultiplier/2;
+        //center = position + (size / 2);
+        // center.y = settings.heightMultiplier/2;
         rootNode = new QuadTreeNode(center, size, settings);
         rootNode.GenerateNode(leaves);
         foreach (QuadTreeNode leaf in leaves) {

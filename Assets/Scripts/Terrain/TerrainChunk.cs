@@ -47,14 +47,16 @@ public class TerrainChunk : MonoBehaviour
 
     public void Init(Vector2 chunkCoord, int chunkSize, Material chunkMaterial, QuadTreeSettings settings)
     {
+        _terrain = transform.parent.GetComponent<InfiniteTerrain>();
+        
         coord = chunkCoord;
-        size = chunkSize;
+        size = _terrain.chunkSize;
         position = CoordToPos(chunkCoord, size);
-        quadTree = new QuadTree(position,new Vector3(size,settings.heightMultiplier,size),settings); 
+        
+        quadTree = new QuadTree(position,new Vector3(size,_terrain.quadTreeSettings.heightMultiplier*2,size),_terrain.quadTreeSettings); 
         bounds = new Bounds(quadTree.center, quadTree.size);
         gameObject.name = "Chunk (" + coord.x + "," + coord.y + ")";
 
-        _terrain = gameObject.transform.parent.GetComponent<InfiniteTerrain>();
         _meshFilter = gameObject.AddComponent<MeshFilter>();
         _meshRenderer = gameObject.AddComponent<MeshRenderer>();
         _meshCollider = gameObject.AddComponent<MeshCollider>();
