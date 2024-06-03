@@ -148,7 +148,7 @@ Transform:
   m_GameObject: {fileID: 13129056}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -68.48, y: 50, z: 46.81}
+  m_LocalPosition: {x: -681.05, y: 105, z: 98.4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -452,17 +452,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 580d81f24ae847a099c55da1d01bccf0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TerrainChunkPrefab: {fileID: 8888593809752506191, guid: f97c977126790a045bcaf162e8391aca,
+  chunkPrefab: {fileID: 8888593809752506191, guid: f97c977126790a045bcaf162e8391aca,
     type: 3}
-  material: {fileID: -876546973899608171, guid: bf43fd49fb381d94cba3d1c939898f36,
+  chunkMaterial: {fileID: -876546973899608171, guid: bf43fd49fb381d94cba3d1c939898f36,
     type: 3}
   chunkSize: 1024
-  chunkRenderDistance: 2
+  chunkRenderDistance: 1
+  GrassPrefab: {fileID: 6739804228592001243, guid: 6cdd667aa0034cd4dadc8d58a65fb098,
+    type: 3}
+  WaterPrefab: {fileID: 46339249075548053, guid: 9274834ee3ffe0b41af8253c7112634a,
+    type: 3}
+  waterLevel: 25
   mainCam: {fileID: 1994792551}
   viewer: {fileID: 175293989}
-  GrassPrefab: {fileID: 6889353147652308550, guid: 487554fbaed532947aaa0bc7e93b37fd,
-    type: 3}
-  noiseComputeShader: {fileID: 7200000, guid: 9f50316fcc81ac642a25c419b9f63334, type: 3}
+  enableChunkOcclusion: 0
   noiseSettings:
     noiseMode: 0
     filterMode: 1
@@ -470,7 +473,7 @@ MonoBehaviour:
     LocalNormalization: 0
     seed: -321893
     scale: 414
-    offset: {x: -231.61, y: 586.06, z: -82.81}
+    offset: {x: 2000, y: 586.06, z: 2000}
     octaves: 2
     lacunarity: 1.632
     persistence: 2.87
@@ -485,17 +488,30 @@ MonoBehaviour:
     warpStrength: 1.34
   quadTreeSettings:
     minSize: 8
-    maxDepth: 8
+    maxDepth: 7
     heightMultiplier: 246.52
-    viewerPosition: {x: -68.48, y: 46.81}
+    viewerPosition: {x: -681.05, y: 98.4}
     distanceModifier: 15
     useInterpolation: 0
     enableOcclusion: 0
     viewerForward: {x: 0.34202012, y: 0, z: 0.9396926}
     camera: {fileID: 1994792551}
-  enableChunkOcclusion: 0
-  enableCaching: 1
-  autoUpdate: 1
+  waterSettings:
+    meshSize: 1024
+    meshScale: 4
+    baseColor: {r: 0.14346743, g: 0.27347338, b: 0.9811321, a: 1}
+    rippleColor: {r: 0.13550198, g: 0.71305305, b: 0.990566, a: 1}
+    rippleSpeed: 2
+    rippleDensity: 10
+    rippleSlimness: 10
+    waveSpeed: 0.75
+    waveStrength: 2
+    waveScale: 0.5
+    scale: 0.05
+    tiling: {x: 1, y: 1}
+    transparency: 8
+    foamOffset: 2
+  autoUpdate: 0
 --- !u!4 &1176205052
 Transform:
   m_ObjectHideFlags: 0
@@ -505,7 +521,7 @@ Transform:
   m_GameObject: {fileID: 1176205049}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 25, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -527,7 +543,7 @@ PrefabInstance:
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.1801453
+      value: -1.1801758
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8,
         type: 3}
@@ -537,7 +553,7 @@ PrefabInstance:
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.8271751
+      value: -3.827179
       objectReference: {fileID: 0}
     - target: {fileID: 2070925441746177912, guid: a1a802ecaf6775746bb2a929fb554ad8,
         type: 3}
@@ -666,7 +682,7 @@ PrefabInstance:
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.1801453
+      value: -1.1801758
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f,
         type: 3}
@@ -676,7 +692,7 @@ PrefabInstance:
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.8271751
+      value: -3.827179
       objectReference: {fileID: 0}
     - target: {fileID: 8944336655422409503, guid: f6d148d888ffbf54b9afe9936dfaec1f,
         type: 3}
