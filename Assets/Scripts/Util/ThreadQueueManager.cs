@@ -12,6 +12,8 @@ public class ThreadQueueManager : MonoBehaviour
     void Update()
     {
         NoiseMapGenerator.ProcessThreadQueue();
+        PoissonDiscSampling.ProcessThreadQueue();
+        RectMeshGenerator.ProcessThreadQueue();
         QuadTreeMeshGenerator.ProcessThreadQueue();
     }
 }
