@@ -38,19 +38,21 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _FoamOffset: 8.77
+    - _FoamOffset: 2
     - _QueueControl: 0
     - _QueueOffset: 0
     - _RippleDensity: 10
-    - _RippleSlimness: 7.5
-    - _RippleSpeed: 1
-    - _Scale: 15
-    - _Transparency: 6
+    - _RippleSlimness: 8
+    - _RippleSpeed: 2
+    - _Scale: 0.05
+    - _Transparency: 8
     - _WaveScale: 0.5
-    - _WaveSpeed: 0.5
+    - _WaveSpeed: 0.75
+    - _WaveStrength: 2
     m_Colors:
-    - _BaseColor: {r: 0.12735847, g: 0.47174805, b: 1, a: 0}
-    - _RippleColor: {r: 0.235849, g: 0.9760725, b: 2, a: 0}
+    - _BaseColor: {r: 0.14346743, g: 0.27347338, b: 0.9811321, a: 1}
+    - _PlayerUV: {r: 0, g: 0, b: 0, a: 0}
+    - _RippleColor: {r: 0.13550198, g: 0.71305305, b: 0.990566, a: 1}
     - _Tiling: {r: 1, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []
 --- !u!114 &365270345454058570

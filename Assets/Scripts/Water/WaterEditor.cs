@@ -10,17 +10,17 @@ public class WaterEditor : Editor
 
         Water water = (Water)target;
 
-        if (GUILayout.Button("Create Mesh"))
-        {
-            if(!water.isInit)
-                water.Init();
-            water.CreateMesh();
-        }
-
-        if (GUILayout.Button("Rest"))
-        {
-            water.Reset(); 
-        }
+        // if (GUILayout.Button("Create Mesh"))
+        // {
+        //     if(!water.isInit)
+        //         water.Init();
+        //     water.CreateMesh();
+        // }
+        //
+        // if (GUILayout.Button("Rest"))
+        // {
+        //     water.Reset(); 
+        // }
 
     }
 }

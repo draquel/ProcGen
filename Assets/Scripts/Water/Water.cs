@@ -1,61 +1,61 @@
-﻿using UnityEditor;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Water : MonoBehaviour
 {
+    public Vector3 position;
     public Material material;
     private MeshFilter _meshFilter;
     private MeshRenderer _meshRenderer;
 
-    public bool isInit = false;
-    public int meshSize = 20;
+    public int meshSize = 256;
+    public int meshScale = 1;
 
-    public Transform followTarget;
-    
-    private void Start()
-    {
-        Init();
-        CreateMesh();
-    }
+    public WaterSettings settings;
 
-    private void Update()
+    public void Init(Vector3 pos, WaterSettings settings)
     {
-        SetPos();
-    }
-
-    public void Init()
-    {
-        if(isInit){ return; }
         _meshFilter = gameObject.AddComponent<MeshFilter>();
         _meshRenderer = gameObject.AddComponent<MeshRenderer>();
         _meshRenderer.material = new Material(material);
-        isInit = true;
+        
+        position = pos;
+        this.settings = settings;
+        meshSize = this.settings.meshSize;
+        meshScale = this.settings.meshScale;
+
+        CreateMesh();
+        SetShaderProps();
     }
 
-    public void SetPos()
+    public void SetShaderProps()
     {
-        if(followTarget)
-            transform.position = new Vector3(followTarget.position.x, transform.position.y, followTarget.position.z);
-            material.SetVector("_playerpos",new Vector2(followTarget.position.x,followTarget.position.z));
+        material.SetFloat("_RippleSpeed",settings.rippleSpeed);
+        material.SetFloat("_RippleDensity",settings.rippleDensity);
+        material.SetFloat("_RippledSlimness",settings.rippleSlimness);
+        material.SetFloat("_WaveSpeed",settings.waveSpeed);
+        material.SetFloat("_WaveStrength",settings.waveStrength);
+        material.SetFloat("_WaveScale",settings.waveScale);
+        material.SetFloat("_Scale",settings.scale);
+        material.SetFloat("_Transparency",settings.transparency);
+        material.SetFloat("_FoamOffset",settings.foamOffset);
+        
+        material.SetVector("_Tiling",settings.tiling);
+        material.SetColor("_BaseColor",settings.baseColor);
+        material.SetColor("_RippleColor",settings.rippleColor);
     }
 
-    public void Reset()
-    {
-        if (Application.isPlaying) {
-            Destroy(gameObject.GetComponent<MeshFilter>()); 
-            Destroy(gameObject.GetComponent<Renderer>()); 
-        } else {
-            Undo.DestroyObjectImmediate(gameObject.GetComponent<Renderer>());
-            Undo.DestroyObjectImmediate(gameObject.GetComponent<MeshFilter>());
-        }
-
-        isInit = false;
-    }
-    
     public void CreateMesh()
     {
-        Vector3 pos = new Vector3(-meshSize/2f, 0, -meshSize/2f);
-        _meshFilter.mesh = RectMeshGenerator.GenerateMeshData(pos, meshSize, meshSize, meshSize, meshSize).CreateMesh();
+        if (Application.isPlaying) {
+            RectMeshGenerator.RequestRectMesh(position, meshSize, meshSize, ApplyMesh, meshSize/meshScale, meshSize/meshScale);
+        } else {
+            ApplyMesh(RectMeshGenerator.GenerateMeshData(position, meshSize, meshSize, meshSize/meshScale, meshSize/meshScale));
+        }
+    }
+
+    private void ApplyMesh(MeshData meshData)
+    {
+        _meshFilter.mesh = meshData.CreateMesh();
     }
 }
 
