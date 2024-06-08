@@ -1,10 +1,9 @@
-using System;
 using Unity.VisualScripting;
 using UnityEngine;
 
 public class NoiseMapRenderer : MonoBehaviour
 {
-    public enum RenderMode {Render2D, MarchingCubes, QuadTree}
+    public enum RenderMode {Render2D, Rect, MarchingCubes, QuadTree}
 
     [Header("Render Settings")]
     public RenderMode renderMode;
@@ -28,7 +27,6 @@ public class NoiseMapRenderer : MonoBehaviour
             UpdatePlayerPos();
             DrawQuads(); 
         }
-        
     }
 
     public void Update()
@@ -57,7 +55,12 @@ public class NoiseMapRenderer : MonoBehaviour
 
         BuildChunk(meshData);
     }
-
+    public void DrawMesh()
+    {
+        int size = noiseMapSettings.mapSize.x;
+        MeshData meshData = RectMeshGenerator.GenerateMeshData(noiseMapSettings.position, size, noiseMapSettings.mapSize.z, size - 1, size - 1,noiseMapSettings.noiseSettings,250);
+        BuildChunk(meshData);
+    }
     public void DrawQuads()
     {
         QuadTree tree = new QuadTree(noiseMapSettings.position,noiseMapSettings.mapSize,quadTreeSettings);
@@ -91,7 +94,8 @@ public class NoiseMapRenderer : MonoBehaviour
         else {
             chunk = target.transform.GetChild(0).GameObject();
         }
-        chunk.GetComponent<MeshFilter>().mesh = meshData.CreateMesh(true);
+        meshData.AverageNormals();
+        chunk.GetComponent<MeshFilter>().mesh = meshData.CreateMesh(false);
 
         return chunk;
     } 
@@ -113,9 +117,4 @@ public class NoiseMapRenderer : MonoBehaviour
             target.GetComponent<Renderer>().sharedMaterial.mainTexture = texture;
         } 
     }
-
-    // private void OnDrawGizmos()
-    // {
-    //     throw new NotImplementedException();
-    // }
 }

@@ -28,7 +28,24 @@ public static class NoiseMapGenerator
 		if (settings.noiseSettings.LocalNormalization) { noiseMap.normalize(size,settings.noiseSettings.normalizeMode); }
         return noiseMap;
 	}
-
+    
+    public static NoiseMap GenerateNoiseMap(Vector3 position, Vector3Int mapSize, NoiseSettings settings, int step = 1)
+    {
+	    Vector2Int size = new Vector2Int(mapSize.x, mapSize.z);
+	    NoiseMap noiseMap = new NoiseMap(size);
+	    for (int z = 0; z < mapSize.z; z+=step) {
+		    for (int x = 0; x < mapSize.x; x+=step) {
+			    Vector3 mapPos = new Vector3(x,settings.seed,z);
+			    Vector3 sample = (position + settings.offset + mapPos) / settings.scale;
+			    noiseMap.addValue(new Vector2Int(x,z),Noise.Evaluate(sample,settings));
+		    }
+	    }
+	    if (settings.LocalNormalization) { noiseMap.normalize(size,settings.normalizeMode); }
+	    return noiseMap;
+    }
+    
+    
+    
     
     //3D Maps
     public static DensityMap GenerateDensityMap(DensityMapSettings settings) {
@@ -60,7 +77,7 @@ public static class NoiseMapGenerator
 	    return densityMap;
     }
     
-  //Color Maps
+	//Color Maps
     public static Color[] GenerateColorMap(NoiseMap noiseMap, Gradient gradient){
 	    Color[] colorMap = new Color[noiseMap.size.x*noiseMap.size.y];
 	    for (int y = 0; y < noiseMap.size.y; y++) {
@@ -93,15 +110,6 @@ public static class NoiseMapGenerator
 		new Thread(start).Start();
 	}
 	
-	public static void RequestDensityMap(DensityMapSettings settings, Action<DensityMap> callback)
-	{
-		ThreadStart start = delegate
-		{
-			DensityMapGeneratorThread(settings, callback);
-		};
-		new Thread(start).Start();
-	}
-
 	public static void NoiseMapGeneratorThread(NoiseMapSettings settings,Action<NoiseMap> callback)
 	{
 		NoiseMap map = GenerateNoiseMap(settings);
@@ -110,6 +118,34 @@ public static class NoiseMapGenerator
 			NoiseThreadQueue.Enqueue(new MapGeneratorThreadData<NoiseMap>(callback,map));
 		}
 	}
+	
+	public static void RequestNoiseMap(Vector3 position, Vector3Int mapSize,NoiseSettings settings, Action<NoiseMap> callback)
+	{
+		ThreadStart start = delegate
+		{
+			NoiseMapGeneratorThread( position, mapSize,settings, callback);
+		};
+		new Thread(start).Start();
+	}
+	
+	public static void NoiseMapGeneratorThread(Vector3 position, Vector3Int mapSize,NoiseSettings settings,Action<NoiseMap> callback)
+	{
+		NoiseMap map = GenerateNoiseMap(position, mapSize,settings);
+		lock (NoiseThreadQueue)
+		{
+			NoiseThreadQueue.Enqueue(new MapGeneratorThreadData<NoiseMap>(callback,map));
+		}
+	}
+	
+	public static void RequestDensityMap(DensityMapSettings settings, Action<DensityMap> callback)
+	{
+		ThreadStart start = delegate
+		{
+			DensityMapGeneratorThread(settings, callback);
+		};
+		new Thread(start).Start();
+	}
+	
 	public static void DensityMapGeneratorThread(DensityMapSettings settings,Action<DensityMap> callback)
 	{
 		DensityMap map = GenerateDensityMap(settings);
@@ -150,42 +186,4 @@ public static class NoiseMapGenerator
 			}
 		}
 	}
-	
-	// public static NoiseMap GenerateNoiseMapCentered(NoiseMapSettings settings) {
-//  Vector2Int size = new Vector2Int(settings.mapSize.x, settings.mapSize.z);
-//  NoiseMap noiseMap = new NoiseMap(size);
-//  Vector2 halfSize = (Vector2) size * 0.5f;
-//  for (int z = 0; z < size.y; z++) {
-//   for (int x = 0; x < size.x; x++) {
-//    Vector3 mapPos = new Vector3(x-halfSize.x,0,z-halfSize.y);
-//    Vector3 sample = (settings.position + settings.noiseSettings.offset + mapPos) / settings.noiseSettings.scale;
-//    noiseMap.addValue(new Vector2Int(x,z), Noise.Evaluate(sample,settings.noiseSettings));
-//   }
-//  }
-//  return noiseMap;
-// }
-//   public static float[,] GenerateHeightMap(Vector3 position, Vector2Int size, NoiseSettings settings, float heightMultiplier = 25f) {
-//       float[,] heightMap = new float[size.x,size.y];
-	// for (int z = 0; z < size.y; z++) {
-	// 	for (int x = 0; x < size.x; x++) {
-//               Vector3 mapPos = new Vector3(x,0,z);
-//               Vector3 sample = (position + settings.offset + mapPos) / settings.scale;
-//               heightMap[x,z] = Noise.Evaluate(sample,settings) * heightMultiplier;
-//           }
-//       }
-//       return heightMap;
-//   }
-//   
-//   public static float[,] GenerateHeightMapCentered(Vector3 position, Vector2Int size, NoiseSettings settings, float heightMultiplier = 25f) {
-	//    float[,] heightMap = new float[size.x,size.y];
-	//    Vector2 halfSize = (Vector2) size * 0.5f;
-	//    for (int z = 0; z < size.y; z++) {
-	//     for (int x = 0; x < size.x; x++) {
-	// 	    Vector3 mapPos = new Vector3(x-halfSize.x,0,z-halfSize.y);
-	// 	    Vector3 sample = (position + settings.offset + mapPos) / settings.scale;
-	// 	    heightMap[x,z] = Noise.Evaluate(sample,settings) * heightMultiplier;
-	//     }
-	//    }
-	//    return heightMap;
-//   }
 }

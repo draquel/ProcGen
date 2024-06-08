@@ -128,7 +128,7 @@ public static class RectMeshGenerator
     public static void ProcessThreadQueue()
     {
         if (RectMeshThreadQueue.Count > 0) {
-            for (int i = 0; i < RectMeshThreadQueue.Count; i++) {
+            for (int i = 0; i < (RectMeshThreadQueue.Count > 2 ? 2 : RectMeshThreadQueue.Count); i++) {
                 RectMeshThreadData<MeshData> threadData = RectMeshThreadQueue.Dequeue();
                 threadData.callback(threadData.parameter);
             }

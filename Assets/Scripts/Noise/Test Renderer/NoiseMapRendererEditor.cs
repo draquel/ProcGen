@@ -17,6 +17,7 @@ public class NoiseMapRendererEditor : Editor
 
         if(GUILayout.Button("Generate Map")){
             if(noiseMapRenderer.renderMode == NoiseMapRenderer.RenderMode.Render2D) { noiseMapRenderer.DrawNoiseMap(); }
+            else if (noiseMapRenderer.renderMode == NoiseMapRenderer.RenderMode.Rect){ noiseMapRenderer.DrawMesh(); }
             else if(noiseMapRenderer.renderMode == NoiseMapRenderer.RenderMode.MarchingCubes) { noiseMapRenderer.DrawDensityMap(); }
             else if(noiseMapRenderer.renderMode == NoiseMapRenderer.RenderMode.QuadTree) { noiseMapRenderer.DrawQuads();}
         }

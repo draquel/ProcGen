@@ -16,7 +16,7 @@ public class NoiseSettings{
 	public float scale = 50f;
     public Vector3 offset;
     [Header("Perlin")]
-    [Range(0,5)]
+    [Range(0,10)]
 	public int octaves = 3;
     [Range(1,3)]
 	public float lacunarity = 2f;

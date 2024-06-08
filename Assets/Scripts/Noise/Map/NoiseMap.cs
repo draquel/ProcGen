@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 
-public class NoiseMap 
+public class NoiseMap
 {
     public float[,] map;
     public Vector2Int size;
@@ -25,6 +25,19 @@ public class NoiseMap
                 map[x,z] = (map[x,z] - minMax.Min) / (minMax.Max - minMax.Min);
             }
         }
+    }
+
+    public Texture2D createTexture()
+    {
+        Texture2D texture = new Texture2D(size.x, size.y);
+        for (int z = 0; z < size.y; z++)
+        {
+            for (int x = 0; x < size.x; x++)
+            {
+                texture.SetPixel(x,z,new Color(map[x,z],0,0,1));
+            }
+        }
+        return texture;
     }
 }
 
