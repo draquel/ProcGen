@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class InfiniteTerrain : MonoBehaviour
 {
@@ -9,14 +8,7 @@ public class InfiniteTerrain : MonoBehaviour
 
    [Header("Chunk")]
    public GameObject chunkPrefab;
-   public Material chunkMaterial;
-
-   public int chunkSize = 64;
    public int chunkRenderDistance = 3;
-
-   public GameObject GrassPrefab;
-   public GameObject WaterPrefab;
-   public float waterLevel = 50f;
    
    [Header("Camera")]
    public Camera mainCam;
@@ -25,17 +17,10 @@ public class InfiniteTerrain : MonoBehaviour
    private Quaternion viewerLastRot;
    public bool enableChunkOcclusion = false;
 
-   
    [Header("Settings")]
-   public NoiseSettings noiseSettings;
-   public QuadTreeSettings quadTreeSettings;
-   public WaterSettings waterSettings;
+   public TerrainChunkSettings chunkSettings;
    
    public bool autoUpdate; 
-   //public bool enableCaching = false;
-   
-   
-   //public ComputeShader noiseComputeShader;
    
    private void Start()
    {
@@ -45,8 +30,8 @@ public class InfiniteTerrain : MonoBehaviour
 
    private void Update()
    {
-      if ((!quadTreeSettings.enableOcclusion && !enableChunkOcclusion && viewerDistanceCheck()) ||
-          ((quadTreeSettings.enableOcclusion || enableChunkOcclusion) && (viewerRotationCheck() || viewerDistanceCheck())))
+      if ((!chunkSettings.quadTreeSettings.enableOcclusion && !enableChunkOcclusion && viewerDistanceCheck()) ||
+          ((chunkSettings.quadTreeSettings.enableOcclusion || enableChunkOcclusion) && (viewerRotationCheck() || viewerDistanceCheck())))
       {
          setPlayerPos();
          UpdateChunks();
@@ -59,13 +44,13 @@ public class InfiniteTerrain : MonoBehaviour
       viewerLastPos = t.position;
       viewerLastRot = t.rotation;
       
-      quadTreeSettings.viewerPosition = new Vector2(viewerLastPos.x, viewerLastPos.z);
-      quadTreeSettings.viewerForward = t.forward;
+      chunkSettings.quadTreeSettings.viewerPosition = new Vector2(viewerLastPos.x, viewerLastPos.z);
+      chunkSettings.quadTreeSettings.viewerForward = t.forward;
    }
 
    public bool viewerDistanceCheck() {
       return Vector3.Distance(viewerLastPos,viewer.transform.position) >
-             quadTreeSettings.minSize * (quadTreeSettings.distanceModifier == 1 ? 1 : quadTreeSettings.distanceModifier-1);
+             chunkSettings.quadTreeSettings.minSize * (chunkSettings.quadTreeSettings.distanceModifier == 1 ? 1 : chunkSettings.quadTreeSettings.distanceModifier-1);
    }
 
    public bool viewerRotationCheck()
@@ -78,7 +63,7 @@ public class InfiniteTerrain : MonoBehaviour
    {
       GameObject chunkGO = Instantiate(chunkPrefab, transform);
       TerrainChunk chunk = chunkGO.GetComponent<TerrainChunk>();
-      chunk.Init(chunkCoord);
+      chunk.Init(chunkCoord,chunkSettings);
       return chunk;
    }
 
@@ -87,22 +72,22 @@ public class InfiniteTerrain : MonoBehaviour
       foreach (TerrainChunk item in terrainChunksVisibleLastUpdate) { item.setVisibility(false); }
       terrainChunksVisibleLastUpdate.Clear();
       
-      int currentChunkCoordX = Mathf.FloorToInt(viewer.transform.position.x / chunkSize);
-      int currentChunkCoordZ = Mathf.FloorToInt(viewer.transform.position.z / chunkSize);
+      int currentChunkCoordX = Mathf.FloorToInt(viewer.transform.position.x / chunkSettings.size);
+      int currentChunkCoordZ = Mathf.FloorToInt(viewer.transform.position.z / chunkSettings.size);
 
       for (int zOffset = -chunkRenderDistance; zOffset < chunkRenderDistance; zOffset++) {
          for (int xOffset = -chunkRenderDistance; xOffset < chunkRenderDistance; xOffset++) {
             Vector2 chunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordZ + zOffset);
             if (terrainChunkDictionary.ContainsKey(chunkCoord)) {
-               if (!enableChunkOcclusion || (enableChunkOcclusion && terrainChunkDictionary[chunkCoord].isVisible())) {
-                  terrainChunkDictionary[chunkCoord].UpdateChunk(noiseSettings);
+               if (!enableChunkOcclusion || (enableChunkOcclusion && terrainChunkDictionary[chunkCoord].VisibilityCheck())) {
+                  terrainChunkDictionary[chunkCoord].UpdateChunk();
                   terrainChunkDictionary[chunkCoord].setVisibility(true);
                   terrainChunksVisibleLastUpdate.Add(terrainChunkDictionary[chunkCoord]);
                }
             } else {
                terrainChunkDictionary.Add(chunkCoord,CreateChunk(chunkCoord));
-               if (!enableChunkOcclusion || (enableChunkOcclusion && terrainChunkDictionary[chunkCoord].isVisible())) {
-                  terrainChunkDictionary[chunkCoord].UpdateChunk(noiseSettings);
+               if (!enableChunkOcclusion || (enableChunkOcclusion && terrainChunkDictionary[chunkCoord].VisibilityCheck())) {
+                  terrainChunkDictionary[chunkCoord].UpdateChunk();
                   terrainChunkDictionary[chunkCoord].setVisibility(true);
                   terrainChunksVisibleLastUpdate.Add(terrainChunkDictionary[chunkCoord]);
                }

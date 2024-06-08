@@ -50,10 +50,9 @@ MonoBehaviour:
   bounds:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 0, y: 0, z: 0}
-  meshRequested: 0
-  collisionMeshRequested: 0
-  hasCollisionMesh: 0
-  material: {fileID: 2100000, guid: db9cebb4c6797c34fa7d04a5d59b8374, type: 2}
-  grassMesh: {fileID: 3836962167230424001, guid: 8c71f03fcb0c13644a30696cafc5cda8,
+  hasNoise: 0
+  material: {fileID: 2100000, guid: 61bfeeb0e55f91f49842c5ebd6bf39f5, type: 2}
+  noise: {fileID: 0}
+  grassMesh: {fileID: -4550125092169740112, guid: ad3119cbd6dce024e8460ef32dec49df,
     type: 3}
-  grassMaterial: {fileID: 2100000, guid: d17290ebc0f9aae4dbd389e87eb41844, type: 2}
+  grassMaterial: {fileID: 2100000, guid: 93caadf4359ae8143aad35b3145d31af, type: 2}

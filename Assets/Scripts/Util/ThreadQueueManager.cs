@@ -2,18 +2,20 @@ using UnityEngine;
 
 public class ThreadQueueManager : MonoBehaviour
 {
-    // Start is called before the first frame update
     void Start()
     {
         
     }
 
-    // Update is called once per frame
     void Update()
     {
-        NoiseMapGenerator.ProcessThreadQueue();
-        PoissonDiscSampling.ProcessThreadQueue();
-        RectMeshGenerator.ProcessThreadQueue();
-        QuadTreeMeshGenerator.ProcessThreadQueue();
+        if (Time.frameCount % 2 == 0) {
+            // NoiseMapGenerator.ProcessThreadQueue();
+            NoiseTextureGenerator.ProcessThreadQueue();
+            PoissonDiscSampling.ProcessThreadQueue(); 
+        } else {
+            RectMeshGenerator.ProcessThreadQueue();
+            QuadTreeMeshGenerator.ProcessThreadQueue(); 
+        }
     }
 }
