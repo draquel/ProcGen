@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 
-public static class Direction {
+public struct Direction {
     public const int East = 0, West = 1, North = 2, South = 3;
     /// <summary> East = 0, West = 1, North = 2, South = 3 </summary>
     public const int E = 0, W = 1, N = 2, S = 3;
 }
 
-public static class Quadrant {
+public struct Quadrant {
     public const int NorthWest = 0, NorthEast = 1, SouthEast = 2, SouthWest = 3;
     /// <summary> North West = 0, North East = 1, South East = 2, South West = 3 </summary>
     public const int NW = 0, NE = 1, SE = 2, SW = 3;
@@ -32,14 +33,12 @@ public class QuadTree
         this.settings = settings;
         
         center = position + (size / 2);
-         center.y -= settings.heightMultiplier;
+        center.y -= settings.heightMultiplier/2;
     }
 
     public void GenerateTree()
     {
         leaves.Clear();
-        //center = position + (size / 2);
-        // center.y = settings.heightMultiplier/2;
         rootNode = new QuadTreeNode(center, size, settings);
         rootNode.GenerateNode(leaves);
         foreach (QuadTreeNode leaf in leaves) {
@@ -55,15 +54,26 @@ public class QuadTree
             if(depth < leaf.depth)
                 depth = leaf.depth;
         }
-        //Debug.Log("QuadTree.GetDepth(): ");
         return depth;
     }
 
-    public void OnDrawGizmos()
+    public void DrawLeafBounds()
     {
         foreach (QuadTreeNode leaf in leaves) {
-            leaf.OnDrawGizmos();
+            leaf.DrawBounds();
         }
+    }
+
+    public NativeArray<QuadTreeLeaf> LeavesStruct()
+    {
+        NativeArray<QuadTreeLeaf> leavesNA = new NativeArray<QuadTreeLeaf>();
+        
+        for(int i = 0; i < leaves.Count; i++)
+        {
+            leavesNA[i] = new QuadTreeLeaf(leaves[i].center, leaves[i].size, leaves[i].NeighborsStruct());
+        }
+
+        return leavesNA;
     }
 }
 
@@ -109,23 +119,25 @@ public class QuadTreeNode
     {
         if (NodeCheck() && DistanceCheck()) {
             Split();
-            foreach (QuadTreeNode node in children) {
-                node.GenerateNode(leaves);
-            }
+            GenerateChildren(leaves);
         } else {
-            if (settings.enableOcclusion)
-            {
-                Plane[] planes = FrustrumUtility.ScalePlanes(this.planes,1.2f);
-                planes = FrustrumUtility.MovePlanes(planes,settings.minSize*settings.minSize*settings.distanceModifier,-settings.viewerForward);
-                if (FrustrumUtility.IsPartiallyInFrustum(planes,bounds)) {
-                    leaves.Add(this);
-                }
-            }
-            else {
+            if (!settings.enableOcclusion || (settings.enableOcclusion && VisibilityCheck()))
                 leaves.Add(this);
-            }
-
         }
+    }
+
+    private void GenerateChildren(List<QuadTreeNode> leaves)
+    {
+        foreach (QuadTreeNode node in children) {
+            node.GenerateNode(leaves);
+        }
+    }
+
+    public bool VisibilityCheck()
+    {
+        Plane[] planes = FrustrumUtility.ScalePlanes(this.planes,1.2f);
+        planes = FrustrumUtility.MovePlanes(planes,settings.minSize*settings.minSize*settings.distanceModifier,-settings.viewerForward);
+        return FrustrumUtility.IsPartiallyInFrustum(planes, bounds);
     }
 
     public bool DistanceCheck()
@@ -155,7 +167,12 @@ public class QuadTreeNode
         children[1] = new QuadTreeNode(center + new Vector3(qtrSize.x, 0, qtrSize.z), halfSize, settings, rootNode, hash * 4 + 1, depth + 1,Quadrant.NE);
         children[2] = new QuadTreeNode(center + new Vector3(qtrSize.x, 0, -qtrSize.z), halfSize, settings, rootNode, hash * 4 + 2, depth + 1,Quadrant.SE);
         children[3] = new QuadTreeNode(center + new Vector3(-qtrSize.x, 0, -qtrSize.z), halfSize, settings, rootNode, hash * 4 + 3, depth + 1,Quadrant.SW);
-    } 
+    }
+
+    public Neighbors NeighborsStruct()
+    {
+        return new Neighbors(neighbors[Direction.North],neighbors[Direction.South],neighbors[Direction.East],neighbors[Direction.West]);
+    }
     
     public void CheckNeighbors() 
     {
@@ -221,7 +238,7 @@ public class QuadTreeNode
         return res;
     }
 
-    public void OnDrawGizmos()
+    public void DrawBounds()
     {
         Gradient gradient = new Gradient();
         
@@ -239,6 +256,37 @@ public class QuadTreeNode
         result.a = 0.3f;
        
         Gizmos.color = result;
-        Gizmos.DrawCube(center,size);
+        Gizmos.DrawWireCube(center,size);
     }
+}
+
+public struct QuadTreeLeaf
+{
+    private Vector3 center;
+    private Vector3 size;
+    private Neighbors neighbors;
+
+    public QuadTreeLeaf(Vector3 center, Vector3 size, Neighbors neighbors)
+    {
+        this.center = center;
+        this.size = size;
+        this.neighbors = neighbors;
+    }
+}
+
+public struct Neighbors
+{
+    public bool North;
+    public bool South;
+    public bool East;
+    public bool West;
+
+    public Neighbors(bool N, bool S, bool E, bool W)
+    {
+        North = N;
+        South = S;
+        East = E;
+        West = W;
+    }
+    
 }
